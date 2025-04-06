@@ -51,6 +51,7 @@ export const authProviders: ProviderConfig[] = [
       scope: ["https://www.googleapis.com/auth/gmail.modify"],
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      redirectUri: process.env.GOOGLE_REDIRECT_URI,
     },
     required: true
   }
@@ -82,7 +83,10 @@ export const authProviders: ProviderConfig[] = [
 export function isProviderEnabled(provider: ProviderConfig): boolean {
   if (provider.isCustom) return true;
 
-  const hasEnvVars = provider.requiredEnvVars.every(envVar => !!process.env[envVar]);
+  const hasEnvVars = provider.requiredEnvVars.every(envVar => {
+    const value = process.env[envVar];
+    return value !== undefined && value !== null && value !== '';
+  });
 
   if (provider.required && !hasEnvVars) {
     console.error(`Required provider "${provider.id}" is not configured properly.`);
