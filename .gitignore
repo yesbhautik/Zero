@@ -48,3 +48,6 @@ next-env.d.ts
 .turbo
 
 e.docker-compose.production.yml
+docker-compose.production.yml
+
+Dockerfile

@@ -1,3 +1,1 @@
-import { NotFound } from './(error)/not-found';
-
-export default NotFound;
+export { NotFound as default } from './(error)/not-found';
