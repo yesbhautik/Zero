@@ -5,7 +5,6 @@ import { getBrowserTimezone, isValidTimezone } from '@/lib/timezones';
 import { defaultUserSettings } from '@zero/db/user_settings_default';
 import { betterAuth, type BetterAuthOptions } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
-import { getSocialProviders } from './auth-providers';
 import { redirect } from 'next/navigation';
 import { eq } from 'drizzle-orm';
 import { Resend } from 'resend';
@@ -16,6 +15,11 @@ import { db } from '@zero/db';
 const resend = process.env.RESEND_API_KEY
   ? new Resend(process.env.RESEND_API_KEY)
   : { emails: { send: async (...args: any[]) => console.log(args) } };
+
+// Get the Google OAuth credentials directly
+const googleClientId = process.env.GOOGLE_CLIENT_ID || '';
+const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET || '';
+const googleRedirectUri = process.env.GOOGLE_REDIRECT_URI || '';
 
 const options = {
   database: drizzleAdapter(db, {
@@ -30,7 +34,16 @@ const options = {
     expiresIn: 60 * 60 * 24 * 7, // 7 days
     updateAge: 60 * 60 * 24, // 1 day (every 1 day the session expiration is updated)
   },
-  socialProviders: getSocialProviders(),
+  socialProviders: {
+    google: {
+      prompt: "consent",
+      accessType: "offline",
+      scope: ["https://www.googleapis.com/auth/gmail.modify"],
+      clientId: googleClientId,
+      clientSecret: googleClientSecret,
+      redirectUri: googleRedirectUri,
+    }
+  },
   emailAndPassword: {
     enabled: false,
     requireEmailVerification: true,
@@ -214,5 +227,6 @@ const options = {
 
 export const auth = betterAuth({
   ...options,
+  secret: process.env.BETTER_AUTH_SECRET || 'supersecret_do_not_use_this_in_production',
   trustedOrigins: process.env.BETTER_AUTH_TRUSTED_ORIGINS?.split(',') ?? [],
 });

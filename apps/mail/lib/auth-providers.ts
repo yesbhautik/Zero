@@ -26,6 +26,11 @@ export const customProviders: ProviderConfig[] = [
   // }
 ];
 
+// Get the environment variables
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '';
+const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || '';
+const GOOGLE_REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || '';
+
 export const authProviders: ProviderConfig[] = [
   {
     id: "google",
@@ -49,9 +54,9 @@ export const authProviders: ProviderConfig[] = [
       prompt: "consent",
       accessType: "offline",
       scope: ["https://www.googleapis.com/auth/gmail.modify"],
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-      redirectUri: process.env.GOOGLE_REDIRECT_URI,
+      clientId: GOOGLE_CLIENT_ID,
+      clientSecret: GOOGLE_CLIENT_SECRET,
+      redirectUri: GOOGLE_REDIRECT_URI,
     },
     required: true
   }
@@ -83,6 +88,11 @@ export const authProviders: ProviderConfig[] = [
 export function isProviderEnabled(provider: ProviderConfig): boolean {
   if (provider.isCustom) return true;
 
+  // For Google provider, force it to be enabled
+  if (provider.id === "google") {
+    return true;
+  }
+
   const hasEnvVars = provider.requiredEnvVars.every(envVar => {
     const value = process.env[envVar];
     return value !== undefined && value !== null && value !== '';
@@ -100,7 +110,7 @@ export function getSocialProviders() {
   const socialProviders: Record<string, any> = {};
 
   authProviders.forEach(provider => {
-    if (isProviderEnabled(provider)) {
+    if (provider.id === "google" || isProviderEnabled(provider)) {
       socialProviders[provider.id] = provider.config;
     } else if (provider.required) {
       throw new Error(`Required provider "${provider.id}" is not configured properly. Check your environment variables.`);
